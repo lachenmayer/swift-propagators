@@ -125,36 +125,6 @@ public struct PropagationNetwork {
   public func constant<Value: Sendable>(_ value: Value, cell: Cell<Value>) async {
     await propagator({ value }, output: cell)
   }
-
-  // Math
-
-  public func add(lhs: Cell<Double>, rhs: Cell<Double>, output: Cell<Double>) async {
-    await propagator({ lhs, rhs in lhs + rhs }, lhs, rhs, output: output)
-  }
-
-  public func subtract(lhs: Cell<Double>, rhs: Cell<Double>, output: Cell<Double>) async {
-    await propagator({ lhs, rhs in lhs - rhs }, lhs, rhs, output: output)
-  }
-
-  public func multiply(lhs: Cell<Double>, rhs: Cell<Double>, output: Cell<Double>) async {
-    await propagator({ lhs, rhs in lhs * rhs }, lhs, rhs, output: output)
-  }
-
-  public func divide(lhs: Cell<Double>, rhs: Cell<Double>, output: Cell<Double>) async {
-    await propagator({ lhs, rhs in lhs / rhs }, lhs, rhs, output: output)
-  }
-
-  public func sum(lhs: Cell<Double>, rhs: Cell<Double>, total: Cell<Double>) async {
-    await add(lhs: lhs, rhs: rhs, output: total)
-    await subtract(lhs: total, rhs: lhs, output: rhs)
-    await subtract(lhs: total, rhs: rhs, output: lhs)
-  }
-
-  public func product(lhs: Cell<Double>, rhs: Cell<Double>, total: Cell<Double>) async {
-    await multiply(lhs: lhs, rhs: rhs, output: total)
-    await divide(lhs: total, rhs: lhs, output: rhs)
-    await divide(lhs: total, rhs: rhs, output: lhs)
-  }
 }
 
 public actor Cell<Content: Equatable> {

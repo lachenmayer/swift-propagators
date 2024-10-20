@@ -31,8 +31,8 @@ import Testing
   #expect(result == 77.0)
 }
 
-private extension PropagationNetwork {
-  func fahrenheitCelsius(f: Cell<Double>, c: Cell<Double>) async {
+extension PropagationNetwork {
+  fileprivate func fahrenheitCelsius(f: Cell<Double>, c: Cell<Double>) async {
     let thirtyTwo = self.cell(32.0)
     let five = self.cell(5.0)
     let nine = self.cell(9.0)
@@ -41,5 +41,30 @@ private extension PropagationNetwork {
     await self.sum(lhs: thirtyTwo, rhs: fMinus32, total: f)
     await self.product(lhs: fMinus32, rhs: five, total: cBy9)
     await self.product(lhs: c, rhs: nine, total: cBy9)
+  }
+}
+
+@Test func buildingHeight() async throws {
+  let network = PropagationNetwork()
+  let fallTime: Cell<Interval> = network.cell()
+  let buildingHeight: Cell<Interval> = network.cell()
+  await network.fallDuration(fallTime: fallTime, buildingHeight: buildingHeight)
+  try await fallTime.addContent(Interval(low: 2.9, high: 3.1)).get()
+  await network.run()
+  let result = await buildingHeight.content
+  #expect(abs(result!.low - 41.163) < 0.01)
+  #expect(abs(result!.high - 47.243) < 0.01)
+}
+
+extension PropagationNetwork {
+  fileprivate func fallDuration(fallTime t: Cell<Interval>, buildingHeight h: Cell<Interval>) async
+  {
+    let g = self.cell(Interval(low: 9.789, high: 9.832))
+    let oneHalf = self.cell(Interval(exact: 0.5))
+    let t2: Cell<Interval> = self.cell()
+    let gt2: Cell<Interval> = self.cell()
+    await self.quadratic(n: t, n2: t2)
+    await self.product(lhs: g, rhs: t2, total: gt2)
+    await self.product(lhs: oneHalf, rhs: gt2, total: h)
   }
 }
