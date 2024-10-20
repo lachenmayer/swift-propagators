@@ -24,6 +24,14 @@ public struct Interval: Equatable, Hashable, Sendable {
   public var isEmpty: Bool { low > high }
 }
 
+extension Interval: Mergeable {
+  static public func merge(content: Interval, increment: Interval) -> Interval? {
+    let intersected = content.intersect(increment)
+    if intersected.isEmpty { return nil }
+    return intersected
+  }
+}
+
 public func * (lhs: Interval, rhs: Interval) -> Interval {
   Interval.lift((*), lhs, rhs)
 }

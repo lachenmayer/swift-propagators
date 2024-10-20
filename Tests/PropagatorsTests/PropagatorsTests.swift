@@ -74,7 +74,7 @@ extension PropagationNetwork {
 
   let result = await buildingHeight.content!
   #expect(abs(result.low - 44.514) < 0.01)
-  #expect(abs(result.high - 48.978) < 0.01)
+  #expect(abs(result.high - 47.243) < 0.01)
 }
 
 extension PropagationNetwork {

@@ -17,11 +17,18 @@ public struct PropagationNetwork {
   }
 
   public func cell<Content>(
-    _ name: String, _ initialContent: Content? = nil,
-    merge: @escaping Cell<Content>.Merge = makeDefaultMerge()
-  ) -> Cell<Content>
-  where Content: Equatable, Content: Sendable {
-    Cell(scheduler: scheduler, name: name, initialContent: initialContent)
+    _ name: String,
+    _ initialContent: Content? = nil,
+    merge: @escaping MergeFunction<Content> = Merge.equality()
+  ) -> Cell<Content> where Content: Equatable, Content: Sendable {
+    Cell(scheduler: scheduler, name: name, initialContent: initialContent, merge: merge)
+  }
+
+  public func cell<Content>(
+    _ name: String,
+    _ initialContent: Content? = nil
+  ) -> Cell<Content> where Content: Equatable, Content: Sendable, Content: Mergeable {
+    Cell(scheduler: scheduler, name: name, initialContent: initialContent, merge: Content.merge)
   }
 
   public func propagator(neighbors: [AnyCell], alert: @escaping Scheduler.Job)

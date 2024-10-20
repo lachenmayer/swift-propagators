@@ -6,29 +6,27 @@
 //
 
 public actor Cell<Content> where Content: Equatable {
-  public typealias Merge = @Sendable (Content, Content) -> Content?  // nil = inconsistency
-
   let name: String
   public private(set) var content: Content?
   private var neighbors: Set<Propagator> = []
   private let scheduler: Scheduler
-  private let merge: Merge
+  private let merge: @Sendable (Content?, Content?) throws -> Content?
 
   init(
     scheduler: Scheduler,
     name: String,
     initialContent: Content? = nil,
-    merge: @escaping Merge = makeDefaultMerge()
+    merge: @escaping MergeFunction<Content>
   ) {
     self.scheduler = scheduler
     self.name = name
     self.content = initialContent
-    self.merge = merge
+    self.merge = handleIncompleteValues(merge)
   }
 
   public func addContent(_ increment: Content?) async throws(Inconsistency) {
     do {
-      let newContent = try handleIncomplete(merge)(content, increment)
+      let newContent = try merge(content, increment)
       if newContent == content { return }
       content = newContent
       await scheduler.alert(propagators: neighbors)
@@ -46,30 +44,6 @@ public actor Cell<Content> where Content: Equatable {
     neighbors.insert(propagator)
   }
 }
-
-public func makeDefaultMerge<Content: Equatable>() -> Cell<Content>.Merge {
-  return { a, b in if a == b { a } else { nil } }
-}
-
-@Sendable private func handleIncomplete<Content: Equatable>(
-  _ merge: @escaping Cell<Content>.Merge
-) -> @Sendable (Content?, Content?) throws -> Content? {
-  return { content, increment in
-    switch (content, increment) {
-    case (.none, .none): return nil
-    case let (.some(c), .none): return c
-    case let (.none, .some(i)): return i
-    case let (.some(c), .some(i)):
-      if let merged = merge(c, i) {
-        return merged
-      } else {
-        throw MergeError()
-      }
-    }
-  }
-}
-
-struct MergeError: Error {}
 
 public struct Inconsistency: Error, CustomStringConvertible {
   let cell: String
@@ -97,5 +71,23 @@ public struct AnyCell: Sendable {
 extension Cell {
   public nonisolated func erase() -> AnyCell {
     AnyCell(self)
+  }
+}
+
+@Sendable private func handleIncompleteValues<Content: Equatable>(
+  _ merge: @escaping MergeFunction<Content>
+) -> @Sendable (Content?, Content?) throws -> Content? {
+  return { content, increment in
+    switch (content, increment) {
+    case (.none, .none): return nil
+    case let (.some(c), .none): return c
+    case let (.none, .some(i)): return i
+    case let (.some(c), .some(i)):
+      if let merged = merge(c, i) {
+        return merged
+      } else {
+        throw MergeError()
+      }
+    }
   }
 }
