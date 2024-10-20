@@ -21,7 +21,7 @@ public struct Interval: Equatable, Hashable, Sendable {
     self.high = exact
   }
 
-  var isEmpty: Bool { low > high }
+  public var isEmpty: Bool { low > high }
 }
 
 public func * (lhs: Interval, rhs: Interval) -> Interval {
@@ -45,7 +45,7 @@ extension Interval {
 }
 
 extension Interval {
-  func intersect(_ other: Interval) -> Interval {
+  public func intersect(_ other: Interval) -> Interval {
     Interval(low: max(self.low, other.low), high: min(self.high, other.high))
   }
 }
